@@ -1,0 +1,70 @@
+name: FakeServers build ?
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y clang g++-multilib
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+
+      - name: Setting up Python
+        uses: actions/setup-python@v2
+
+      - name: Install AMBuild
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          pip install git+https://github.com/alliedmodders/ambuild
+
+      - name: Checking out SourceMod
+        uses: actions/checkout@v2
+        with:
+          repository: alliedmodders/sourcemod
+          ref: 1.10-dev
+          path: sourcemod
+          submodules: recursive
+
+      - name: Checking out MM:Source
+        uses: actions/checkout@v2
+        with:
+          repository: alliedmodders/metamod-source
+          ref: 1.11-dev
+          path: metamod-source
+
+      - name: Checking out hl2sdk-csgo
+        uses: actions/checkout@v2
+        with:
+          repository: alliedmodders/hl2sdk
+          ref: csgo
+          path: hl2sdk-csgo
+
+      - name: Checking out SteamworksSDK
+        uses: actions/checkout@v2
+        with:
+          repository: ExperimentFailed/Steamworks-SDK
+          ref: main
+          path: steamworks-sdk
+
+      - name: Checking out own repository
+        uses: actions/checkout@v2
+        with:
+          path: fakesrv_ext
+
+      - name: Build ext
+        working-directory: fakesrv_ext
+        run: |
+          mkdir build && cd build
+          python3 ../configure.py --enable-optimize
+          ambuild
+
+      - name: Uploading package
+        uses: actions/upload-artifact@v2
+        with:
+          name: fakesrv_ext-$GITHUB_SHA
+          path: fakesrv_ext/build/package
