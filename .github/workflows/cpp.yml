@@ -1,6 +1,9 @@
 name: FakeServers build ?
 
-on: [push]
+on:
+    push:
+    schedule:
+    - cron: '53 05 01 */3 *'
 
 jobs:
   build:
@@ -66,5 +69,5 @@ jobs:
       - name: Uploading package
         uses: actions/upload-artifact@v2
         with:
-          name: fakesrv_ext-$GITHUB_SHA
+          name: fakesrv_ext-${{ github.sha }}
           path: fakesrv_ext/build/package
